@@ -1,8 +1,8 @@
 (async function automateQuoraUpvotes() {
     let upvotedPosts = new Set(); // Track already upvoted posts
     let totalUpvoted = 0;
-    const maxUpvotes = 1000000; // Large number to ensure continuous operation
-    const upvoteButtonSelector = '.q-click-wrapper.puppeteer_test_votable_upvote_button.bobc9nh.b1cg7ppz.c1nud10e.qu-borderTopLeftRadius--pill.qu-borderBottomLeftRadius--pill.qu-alignItems--center.qu-justifyContent--center.qu-whiteSpace--nowrap.qu-userSelect--none.qu-display--inline-flex.qu-tapHighlight--white.qu-textAlign--center.qu-cursor--pointer.qu-hover--bg--darken';
+    const maxUpvotes = 50; // Stop after 50 upvotes
+    const upvoteButtonSelector = '.q-click-wrapper.puppeteer_test_votable_upvote_button';
 
     // Create floating popup
     const popup = document.createElement('div');
@@ -60,6 +60,7 @@
 
         totalUpvoted++;
         updatePopup();
+
         return true;
     }
 
@@ -67,7 +68,7 @@
         let lastScrollHeight = 0;
         let scrollAttempts = 0;
 
-        while (true) {
+        while (totalUpvoted < maxUpvotes) {
             updateStatus("Scrolling & Looking for Upvotes...");
             let upvoteButtons = Array.from(document.querySelectorAll(upvoteButtonSelector)).filter(btn => !upvotedPosts.has(btn));
             
@@ -90,6 +91,7 @@
             scrollAttempts = 0; // Reset scroll attempts if we find new posts
 
             for (let btn of upvoteButtons) {
+                if (totalUpvoted >= maxUpvotes) break;
                 await upvotePost(btn);
                 await waitFor(2000);
             }
@@ -105,10 +107,12 @@
             }
             lastScrollHeight = document.documentElement.scrollHeight;
         }
+
+        updateStatus("✅ Task Completed!");
+        console.log(`🎉 Upvoted ${totalUpvoted} posts successfully!`);
     }
 
     console.log("🚀 Quora Auto Upvoter Started...");
     await scrollAndUpvote();
-    console.log("✅ Script Running Continuously!");
+    console.log("✅ Script Running!");
 })();
-
